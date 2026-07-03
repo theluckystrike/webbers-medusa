@@ -1,0 +1,93 @@
+{
+  "name": "@webbers/webbers-medusa",
+  "displayName": "Medusa v2 Webbers QoL Plugin",
+  "version": "0.0.1",
+  "description": "Quality-of-life admin customizations for Medusa v2 (notes, customer anonymization, guest order transfer, price-list discount control)",
+  "author": "Webbers B.V. <development@webbers.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webbersagency/webbers-medusa.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webbersagency/webbers-medusa/issues"
+  },
+  "homepage": "https://github.com/webbersagency/webbers-medusa#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    ".medusa/server"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    "./workflows": "./.medusa/server/src/workflows/index.js",
+    "./.medusa/server/src/modules/*": "./.medusa/server/src/modules/*/index.js",
+    "./modules/*": "./.medusa/server/src/modules/*/index.js",
+    "./modules/note/service": "./.medusa/server/src/modules/note/service.js",
+    "./links": "./.medusa/server/src/links/index.js",
+    "./admin": {
+      "import": "./.medusa/server/src/admin/index.mjs",
+      "require": "./.medusa/server/src/admin/index.js",
+      "default": "./.medusa/server/src/admin/index.js"
+    },
+    "./*": "./.medusa/server/src/*.js"
+  },
+  "keywords": [
+    "medusa-v2",
+    "medusa-plugin-integration",
+    "medusa-plugin-other",
+    "medusa-webbers"
+  ],
+  "scripts": {
+    "build": "medusa plugin:build",
+    "dev": "medusa plugin:develop",
+    "prepublishOnly": "medusa plugin:build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@medusajs/admin-sdk": "^2.17.1",
+    "@medusajs/admin-shared": "^2.17.1",
+    "@medusajs/cli": "^2.17.1",
+    "@medusajs/framework": "^2.17.1",
+    "@medusajs/icons": "^2.17.1",
+    "@medusajs/js-sdk": "^2.17.1",
+    "@medusajs/medusa": "^2.17.1",
+    "@medusajs/test-utils": "^2.17.1",
+    "@medusajs/types": "^2.17.1",
+    "@medusajs/ui": "4.0.25",
+    "@medusajs/workflows-sdk": "^2.17.1",
+    "@swc/core": "1.5.7",
+    "@tanstack/react-query": "5.64.2",
+    "@types/node": "^20.19.43",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "prop-types": "^15.8.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "yalc": "1.0.0-pre.53"
+  },
+  "peerDependencies": {
+    "@medusajs/admin-sdk": "^2.17.1",
+    "@medusajs/admin-shared": "^2.17.1",
+    "@medusajs/cli": "^2.17.1",
+    "@medusajs/framework": "^2.17.1",
+    "@medusajs/icons": "^2.17.1",
+    "@medusajs/js-sdk": "^2.17.1",
+    "@medusajs/medusa": "^2.17.1",
+    "@medusajs/types": "^2.17.1",
+    "@medusajs/ui": "4.0.25",
+    "@medusajs/workflows-sdk": "^2.17.1",
+    "@tanstack/react-query": "5.64.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "6.30.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
+}
