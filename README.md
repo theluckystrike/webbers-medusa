@@ -45,6 +45,7 @@ npx medusa db:migrate
 | Settings module + migration (feature flags) | `src/modules/webbers-settings` |
 | Settings admin page (Settings → Webbers QoL) | `src/admin/routes/settings/webbers-medusa` |
 | Note module + migration | `src/modules/note` |
+| Custom-query (`custom_query`) module (raw SQL helpers, no migration) | `src/modules/custom-query` |
 | Always-free (`promotion_addition`) module + migration | `src/modules/promotion-addition` |
 | Price-list-ext (`price_list_ext`) module + migration | `src/modules/price-list-ext` |
 | Links (customer/order note, promotion always-free, price-list-ext) | `src/links` |
@@ -81,9 +82,11 @@ After installing, run the migrations so the plugin's tables exist:
 npx medusa db:migrate
 ```
 
-### Runtime dependencies in the host app
+### The bundled `custom_query` module
 
-- **A `custom_query` module** exposing `PSQLQuery` / `PSQLTransaction` — the anonymize, transfer-guest-orders, edit-email and order-notifications routes resolve it from the container by key (`custom_query`). It is intentionally *not* bundled here so the host app keeps a single shared instance.
+The plugin bundles a `custom_query` module exposing `PSQLQuery` / `PSQLTransaction` — the anonymize, transfer-guest-orders, edit-email and order-notifications routes resolve it from the container by key (`custom_query`).
+
+> **Upgrading from ≤ 1.0.0:** earlier versions required the host app to register its own `custom_query` module. That copy must now be **removed** (both the module directory and its `medusa-config.ts` entry) — two modules with the same key cannot coexist. The bundled module is a drop-in replacement (same key, same API, no migration/table).
 
 > This plugin has **no dependency on any subscriptions package** (or any other domain module). The
 > anonymize / edit-email routines only touch `customer`, `cart` and `order` tables out of the box;

@@ -1,17 +1,7 @@
 import { MedusaRequest, MedusaResponse } from '@medusajs/framework/http';
 import { Modules } from '@medusajs/framework/utils';
-
-// Resolved from the host app's container. The host app must register a module under this key
-// exposing PSQLQuery / PSQLTransaction (see this plugin's README). It is intentionally not
-// bundled here so the app keeps a single shared instance.
-const CUSTOM_QUERY = 'custom_query';
-
-type CustomQueryService = {
-  PSQLQuery<T = any>(query: string, params?: any[]): Promise<T[]>;
-  PSQLTransaction<T = any>(
-    callback: (tx: { execute: (query: string, params?: any[]) => Promise<any> }) => Promise<T>
-  ): Promise<T>;
-};
+import { CUSTOM_QUERY } from '../../../../../modules/custom-query';
+import CustomQueryService from '../../../../../modules/custom-query/service';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const { id } = req.params;

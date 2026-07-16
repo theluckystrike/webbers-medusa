@@ -5,18 +5,8 @@ import { Modules } from '@medusajs/framework/utils';
 import { WEBBERS_SETTINGS_MODULE } from '../../../../../modules/webbers-settings';
 import WebbersSettingsService from '../../../../../modules/webbers-settings/service';
 import { buildEmailSyncStatements } from '../../../../../options';
-
-// Resolved from the host app's container (the host app registers a `custom_query` module
-// exposing PSQLQuery / PSQLTransaction — see this plugin's README). Not bundled here so the
-// app keeps a single shared instance.
-const CUSTOM_QUERY = 'custom_query';
-
-type CustomQueryService = {
-  PSQLQuery<T = any>(query: string, params?: any[]): Promise<T[]>;
-  PSQLTransaction<T = any>(
-    callback: (tx: { execute: (query: string, params?: any[]) => Promise<any> }) => Promise<T>
-  ): Promise<T>;
-};
+import { CUSTOM_QUERY } from '../../../../../modules/custom-query';
+import CustomQueryService from '../../../../../modules/custom-query/service';
 
 type PostEditEmailType = z.infer<typeof PostEditEmail>;
 
