@@ -1,7 +1,7 @@
 {
   "name": "@webbers/webbers-medusa",
   "displayName": "Medusa v2 Webbers QoL Plugin",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Quality-of-life admin customizations for Medusa v2 (notes, customer anonymization, guest order transfer, price-list discount control)",
   "author": "Webbers B.V. <development@webbers.com>",
   "license": "MIT",
@@ -24,7 +24,7 @@
     "./workflows": "./.medusa/server/src/workflows/index.js",
     "./.medusa/server/src/modules/*": "./.medusa/server/src/modules/*/index.js",
     "./modules/*": "./.medusa/server/src/modules/*/index.js",
-    "./modules/note/service": "./.medusa/server/src/modules/note/service.js",
+    "./modules/*/service": "./.medusa/server/src/modules/*/service.js",
     "./links": "./.medusa/server/src/links/index.js",
     "./admin": {
       "import": "./.medusa/server/src/admin/index.mjs",
