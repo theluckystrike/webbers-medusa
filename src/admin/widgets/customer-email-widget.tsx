@@ -21,7 +21,12 @@ async function updateCustomerEmail(id: string, email: string) {
   return res.json();
 }
 
-const CustomerEmailWidget = ({ data }: DetailWidgetProps<AdminCustomer>) => {
+const CustomerEmailWidget = (props: DetailWidgetProps<AdminCustomer>) => {
+  // Remount the form when navigating to another customer, so stale state is discarded
+  return <CustomerEmailForm key={props.data.id} {...props} />;
+};
+
+const CustomerEmailForm = ({ data }: DetailWidgetProps<AdminCustomer>) => {
   const [email, setEmail] = useState(data.email);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
