@@ -1,8 +1,8 @@
 {
   "name": "@webbers/webbers-medusa",
   "displayName": "Medusa v2 Webbers QoL Plugin",
-  "version": "1.1.2",
-  "description": "Quality-of-life admin customizations for Medusa v2 (notes, customer anonymization, guest order transfer, price-list discount control)",
+  "version": "1.2.0",
+  "description": "Quality-of-life admin customizations for Medusa v2 (notes, customer anonymization, guest order transfer, price-list discount control, product reviews)",
   "author": "Webbers B.V. <development@webbers.com>",
   "license": "MIT",
   "repository": {
@@ -37,6 +37,7 @@
     "medusa-v2",
     "medusa-plugin-integration",
     "medusa-plugin-other",
+    "reviews",
     "medusa-webbers"
   ],
   "scripts": {
@@ -44,7 +45,15 @@
     "dev": "medusa plugin:develop",
     "prepublishOnly": "medusa plugin:build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@hookform/resolvers": "3.4.2",
+    "@tanstack/react-table": "^8.21.3",
+    "date-fns": "^4.4.0",
+    "multer": "^2.2.0",
+    "radix-ui": "^1.6.0",
+    "react-hook-form": "^7.80.0",
+    "react-simple-star-rating": "^5.1.7"
+  },
   "devDependencies": {
     "@medusajs/admin-sdk": "^2.17.1",
     "@medusajs/admin-shared": "^2.17.1",
@@ -59,6 +68,7 @@
     "@medusajs/workflows-sdk": "^2.17.1",
     "@swc/core": "1.5.7",
     "@tanstack/react-query": "5.64.2",
+    "@types/multer": "^2.1.0",
     "@types/node": "^20.19.43",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",

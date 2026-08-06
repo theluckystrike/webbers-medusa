@@ -12,6 +12,7 @@ Quality-of-life admin customizations for Medusa v2, extracted from the Frecious 
 - **Order notifications** — sidebar widget listing the transactional emails sent for an order.
 - **Always-free promotion** — flag a promotion as "always free shipping". Ships the data model, workflows, link and admin widget; the host app wires the trigger (see below).
 - **Disallow price-list discounts** — a toggle on the price-list detail page that stops discount/promotion codes from overriding that price list. Ships the data model, link, workflows, admin API + widget, and a store add-to-cart endpoint that enforces it; the storefront wires the endpoint (see below).
+- **Product reviews** — full product-review stack: `review` module (reviews, responses, images, per-product stats), admin **Reviews** page (list + detail, approve/reject/flag, responses, link products), admin/store APIs (`/admin/reviews`, `/admin/product-review-stats`, `/store/product-reviews` incl. image uploads, `/store/product-review-stats`) and an optional daily Kiyoh sync job. See "Product reviews".
 
 ## Toggling features
 
@@ -127,6 +128,44 @@ plugins: [
   },
 ]
 ```
+
+## Product reviews
+
+Ported from the former `@webbers/reviews-medusa` plugin — same module key (`review`), table names
+and migration names, so an app that previously ran the standalone plugin upgrades in place with no
+data changes (remove the old plugin, keep this one, done).
+
+Plugin options (in `medusa-config.ts`):
+
+```ts
+plugins: [
+  {
+    resolve: '@webbers/webbers-medusa',
+    options: {
+      // Status given to newly created reviews: 'pending' | 'approved' | 'flagged'. Default: 'approved'
+      defaultReviewStatus: 'pending',
+      // ...anonymize / editEmail options...
+    },
+  },
+]
+```
+
+The **Kiyoh sync job** runs daily but is a no-op unless these env vars are set in the host app:
+
+```bash
+KIYOH_SYNC_ENABLE=true
+KIYOH_LOCATION_ID=...
+KIYOH_API_TOKEN=...
+```
+
+It matches Kiyoh reviews to orders by `referenceCode` (order display id) and creates product reviews
+through `createReviewsWorkflow`. The workflows are exported (`createReviewsWorkflow`,
+`updateReviewsWorkflow`, `refreshProductReviewStatsWorkflow`, …) for host scripts, e.g. bulk imports
+or stats regeneration.
+
+The `reviews` feature flag gates all review endpoints (admin + store) and the admin Reviews page
+content (the sidebar entry itself cannot be hidden dynamically; the page shows a notice when the
+feature is off).
 
 ## Attaching notes to your own entities
 

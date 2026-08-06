@@ -12,6 +12,13 @@ import type { ZodRawShape } from '@medusajs/framework/zod';
 import { StoreAddCartLineItem, StoreGetCartsCart } from '@medusajs/medusa/api/store/carts/validators';
 import * as CartsQueryConfig from '@medusajs/medusa/api/store/carts/query-config';
 import { PostAdminEditNote } from './admin/note/validators';
+import { adminReviewRoutesMiddlewares } from './admin/reviews/middlewares';
+import { adminProductReviewStatRoutesMiddlewares } from './admin/product-review-stats/middlewares';
+import { adminReviewResponseRouteMiddlewares } from './admin/reviews/[id]/response/middlewares';
+import { adminProductReviewStatusRoutesMiddlewares } from './admin/reviews/[id]/status/middlewares';
+import { storeProductReviewRoutesMiddlewares } from './store/product-reviews/middlewares';
+import { storeProductReviewUploadsMiddlewares } from './store/product-reviews/uploads/middlewares';
+import { storeProductReviewStatRoutesMiddlewares } from './store/product-review-stats/middlewares';
 import { PostEditEmail } from './admin/customers/[id]/edit-email/validators';
 import { PostWebbersSettings } from './admin/webbers-medusa/settings/validators';
 import { PatchAdminUpdatePriceListExt } from './admin/price-lists/[id]/ext/validators';
@@ -115,5 +122,31 @@ export default defineMiddlewares({
       methods: ['POST'] as MiddlewareVerb[],
       middlewares: [validateAndTransformBody(PostWebbersSettings)],
     },
+    // --- Reviews ---
+    // Guard entries first: middleware entries with the same matcher compose in order,
+    // so the guard runs before the per-route validation middlewares below.
+    {
+      matcher: '/admin/reviews*',
+      middlewares: [featureGuard('reviews')],
+    },
+    {
+      matcher: '/admin/product-review-stats*',
+      middlewares: [featureGuard('reviews')],
+    },
+    {
+      matcher: '/store/product-reviews*',
+      middlewares: [featureGuard('reviews')],
+    },
+    {
+      matcher: '/store/product-review-stats*',
+      middlewares: [featureGuard('reviews')],
+    },
+    ...adminReviewRoutesMiddlewares,
+    ...adminProductReviewStatRoutesMiddlewares,
+    ...adminReviewResponseRouteMiddlewares,
+    ...adminProductReviewStatusRoutesMiddlewares,
+    ...storeProductReviewUploadsMiddlewares,
+    ...storeProductReviewRoutesMiddlewares,
+    ...storeProductReviewStatRoutesMiddlewares,
   ],
 });

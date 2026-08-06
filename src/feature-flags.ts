@@ -10,7 +10,8 @@ export type WebbersFeatureKey =
   | 'orderDiscountBreakdown'
   | 'orderNotifications'
   | 'alwaysFreePromotion'
-  | 'disallowPriceListDiscounts';
+  | 'disallowPriceListDiscounts'
+  | 'reviews';
 
 export type WebbersFeatureDefinition = {
   key: WebbersFeatureKey;
@@ -58,6 +59,11 @@ export const WEBBERS_FEATURES: WebbersFeatureDefinition[] = [
     key: 'disallowPriceListDiscounts',
     label: 'Disallow price-list discounts',
     description: "Toggle on a price list to stop discount codes from overriding its prices.",
+  },
+  {
+    key: 'reviews',
+    label: 'Product reviews',
+    description: 'Product reviews: admin Reviews page, store review endpoints and review stats.',
   },
 ];
 
