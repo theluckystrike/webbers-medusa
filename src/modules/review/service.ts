@@ -50,8 +50,16 @@ class ReviewService extends MedusaService({
       sharedContext
     );
 
+    // A product absent from the aggregate has no approved reviews left — its row must reset, not keep old values.
     const toUpdate = foundStats.map(s => ({
       ...s,
+      average_rating: null,
+      review_count: 0,
+      rating_count_1: 0,
+      rating_count_2: 0,
+      rating_count_3: 0,
+      rating_count_4: 0,
+      rating_count_5: 0,
       ...calculatedStats.find(c => c.product_id === s.product_id),
     }));
 

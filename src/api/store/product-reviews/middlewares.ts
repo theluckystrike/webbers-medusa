@@ -13,10 +13,7 @@ export const listStoreProductReviewsQuerySchema = createFindParams({
   // @ts-ignore
   z.object({
     id: z.union([z.string(), z.array(z.string())]).optional(),
-    status: z
-      .union([reviewStatuses, z.array(reviewStatuses)])
-      .default('approved')
-      .optional(),
+    status: z.union([reviewStatuses, z.array(reviewStatuses)]).default('approved'),
     type: z.enum(['product']).optional(),
     product_id: z.union([z.string(), z.array(z.string())]).optional(),
     order_id: z.union([z.string(), z.array(z.string())]).optional(),
