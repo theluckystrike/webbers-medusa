@@ -19,9 +19,11 @@ interface CalculatedProductReviewStats {
 export const moduleOptionsSchema = z
   .object({
     defaultReviewStatus: z.enum(['pending', 'approved', 'flagged']).default('approved'),
+    enableReviewImages: z.boolean().default(true),
   })
   .default({
     defaultReviewStatus: 'approved',
+    enableReviewImages: true,
   });
 
 export type ModuleOptions = z.infer<typeof moduleOptionsSchema>;
@@ -33,13 +35,15 @@ class ReviewService extends MedusaService({
   ProductReviewStats: ProductReviewStatsModel,
 }) {
   public readonly defaultReviewStatus: string;
+  public readonly enableReviewImages: boolean;
 
   constructor(container, options: ModuleOptions) {
     super(container, options);
 
-    const { defaultReviewStatus } = moduleOptionsSchema.parse(options);
+    const { defaultReviewStatus, enableReviewImages } = moduleOptionsSchema.parse(options);
 
     this.defaultReviewStatus = defaultReviewStatus;
+    this.enableReviewImages = enableReviewImages;
   }
 
   async refreshProductReviewStats(productIds: string[], sharedContext?: Context): Promise<ProductReviewStats[]> {

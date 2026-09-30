@@ -8,7 +8,7 @@ import { createFindParams, createOperatorMap } from '@medusajs/medusa/api/utils/
 import { z } from '@medusajs/framework/zod';
 import { PostAdminStoreReview, PostAdminUpdateReview } from './[id]/validators';
 
-const statuses = z.enum(['pending', 'approved', 'rejected'] as const);
+const statuses = z.enum(['pending', 'approved', 'flagged'] as const);
 export const listAdminReviewsQuerySchema = createFindParams({
   offset: 0,
   limit: 50,
@@ -39,6 +39,7 @@ export const defaultAdminReviewFields = [
   'updated_at',
   'response.*',
   'images.*',
+  'has_images',
   'title',
   'products.*',
   'recommend',

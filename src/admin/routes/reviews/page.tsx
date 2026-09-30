@@ -6,6 +6,7 @@ import {
   DataTable,
   DataTableFilteringState,
   DataTablePaginationState,
+  DataTableSortingState,
   Heading,
   toast,
   useDataTable,
@@ -40,6 +41,8 @@ export type Review = {
   created_at: string;
   updated_at: string;
   products: AdminProduct[];
+  images?: { id: string; url: string }[];
+  has_images: boolean;
 };
 
 export type ListReviewsResponse = {
@@ -51,6 +54,22 @@ export type ListReviewsResponse = {
 const limit = 20;
 
 const FILTER_IDS = ['status', 'rating', 'product'] as const;
+const ORDER_PARAM = 'order';
+
+// Before @medusajs/ui 4.2 the filter bar renders its own filter and sort menus (it hands the filter
+// menu an `onAddFilter`); from 4.2 they have to be placed in the toolbar, so add them only then.
+const IS_FILTER_BAR_WITH_MENUS = String(DataTable.FilterBar).includes('onAddFilter');
+const DEFAULT_SORTING: DataTableSortingState = { id: 'created_at', desc: true };
+
+// Sorting lives in the URL as the API's `order` value, e.g. `-rating` for highest rating first.
+function parseSortingState(value: string | null): DataTableSortingState {
+  if (!value) return DEFAULT_SORTING;
+  return value.startsWith('-') ? { id: value.slice(1), desc: true } : { id: value, desc: false };
+}
+
+function transformSortingState(value: DataTableSortingState) {
+  return `${value.desc ? '-' : ''}${value.id}`;
+}
 
 function transformPaginationState(value: DataTablePaginationState) {
   return value.pageIndex * value.pageSize;
@@ -75,18 +94,6 @@ const filterHelper = createDataTableFilterHelper();
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
-}
-
-function toRatingRange(input: unknown): [number, number] | undefined {
-  if (!Array.isArray(input) || input.length === 0) return undefined;
-
-  const nums = input.map(v => Number(v)).filter(n => Number.isFinite(n));
-
-  if (nums.length === 0) return undefined;
-
-  const min = Math.min(...nums);
-  const max = Math.max(...nums);
-  return [min, max];
 }
 
 const StarIcon = ({ filled }: { filled: boolean }) => {
@@ -145,7 +152,24 @@ const ReviewOverviewPage = () => {
     return filters;
   }, [searchParams]);
 
+  const sorting = useMemo(() => parseSortingState(searchParams.get(ORDER_PARAM)), [searchParams]);
+
   const offset = useMemo(() => pagination.pageIndex * limit, [pagination.pageIndex]);
+
+  // The table cycles a column asc → desc → unsorted and reports "unsorted" as undefined;
+  // flipping the direction instead keeps repeated clicks toggling between asc and desc.
+  const handleSortingChange = useCallback(
+    (value: DataTableSortingState | undefined) => {
+      const nextSorting = value ?? { id: sorting.id, desc: !sorting.desc };
+
+      setSearchParams(prev => {
+        prev.set(ORDER_PARAM, transformSortingState(nextSorting));
+        prev.delete('offset');
+        return prev;
+      });
+    },
+    [setSearchParams, sorting]
+  );
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -247,6 +271,7 @@ const ReviewOverviewPage = () => {
       }),
       columnHelper.accessor('status', {
         header: 'Status',
+        enableSorting: true,
         cell: ({ getValue }) => <ReviewStatusCell status={getValue()} />,
       }),
       columnHelper.accessor('name', { header: 'Name' }),
@@ -255,6 +280,22 @@ const ReviewOverviewPage = () => {
         header: 'Rating',
         enableSorting: true,
         cell: ({ getValue }) => <StarRatingCell rating={getValue()} />,
+      }),
+      columnHelper.accessor('has_images', {
+        header: 'Photo',
+        enableSorting: true,
+        sortLabel: 'Photo',
+        sortAscLabel: 'Without photo first',
+        sortDescLabel: 'With photo first',
+        cell: ({ row }) => {
+          const [firstImage] = row.original.images ?? [];
+
+          return firstImage ? (
+            <img src={firstImage.url} alt="" className="h-8 w-8 rounded-md object-cover" />
+          ) : (
+            <span className="text-ui-fg-muted">-</span>
+          );
+        },
       }),
       columnHelper.display({
         id: 'actions',
@@ -309,8 +350,6 @@ const ReviewOverviewPage = () => {
     [updateReviewStatus]
   );
 
-  const ratingRange = toRatingRange(ratingFilters);
-
   const { data } = useQuery<ListReviewsResponse>({
     queryFn: () => {
       const queryParams: any = {
@@ -319,12 +358,12 @@ const ReviewOverviewPage = () => {
         ...(productFilters.length > 0 && { product_id: productFilters.join(',') }),
         q: searchValue,
         status: statusFilters,
-        rating: ratingRange,
-        order: '-created_at',
+        rating: ratingFilters,
+        order: transformSortingState(sorting),
       };
       return sdk.client.fetch(`/admin/reviews`, { query: queryParams });
     },
-    queryKey: ['reviews', limit, pagination, offset, searchValue, statusFilters, ratingFilters, productFilters],
+    queryKey: ['reviews', limit, pagination, offset, searchValue, statusFilters, ratingFilters, productFilters, sorting],
     placeholderData: keepPreviousData,
   });
 
@@ -382,6 +421,7 @@ const ReviewOverviewPage = () => {
       onPaginationChange: handlePaginationChange,
     },
     filtering: { state: filtering, onFilteringChange: handleFilteringChange },
+    sorting: { state: sorting, onSortingChange: handleSortingChange },
     filters,
     search: {
       state: searchValue,
@@ -396,6 +436,8 @@ const ReviewOverviewPage = () => {
         <DataTable.Toolbar className="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
           <Heading>Reviews</Heading>
           <div className="flex gap-2">
+            {!IS_FILTER_BAR_WITH_MENUS && <DataTable.FilterMenu tooltip="Filter" />}
+            {!IS_FILTER_BAR_WITH_MENUS && <DataTable.SortingMenu tooltip="Sort" />}
             <DataTable.Search placeholder="Search..." />
             <Button size="small" type="button" variant="secondary" onClick={open}>
               Create

@@ -1,5 +1,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from '@medusajs/framework';
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
+import { REVIEW_MODULE } from '../../../modules/review';
+import type ReviewService from '../../../modules/review/service';
 import { defaultStoreProductReviewFields, InsertProductReviewsSchema } from './middlewares';
 import { createReviewsWorkflow } from '../../../workflows/review/create-reviews';
 import ReviewProductLink from '../../../links/product-review-product';
@@ -26,9 +28,14 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     ...req.queryConfig,
   });
 
+  const reviewService = req.scope.resolve<ReviewService>(REVIEW_MODULE);
+  const visibleProductReviews = reviewService.enableReviewImages
+    ? product_reviews
+    : product_reviews.map(review => ({ ...review, images: [] }));
+
   res
     .status(200)
-    .json({ product_reviews, count: metadata?.count ?? 0, offset: metadata?.skip ?? 0, limit: metadata?.take ?? 0 });
+    .json({ product_reviews: visibleProductReviews, count: metadata?.count ?? 0, offset: metadata?.skip ?? 0, limit: metadata?.take ?? 0 });
 };
 
 export const POST = async (req: AuthenticatedMedusaRequest<InsertProductReviewsSchema>, res: MedusaResponse) => {
