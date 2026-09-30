@@ -14,6 +14,7 @@ export const ReviewModel = model.define('review', {
   recommend: model.boolean().default(false),
   content: model.text().searchable().nullable(),
   images: model.hasMany(() => ReviewImageModel),
+  has_images: model.boolean().default(false),
   type: model.enum(['store', 'product']).default('store'),
   response: model.hasOne(() => ReviewResponseModel, { nullable: true }).nullable(),
   status: model.enum(['pending', 'approved', 'flagged']).default('pending'),

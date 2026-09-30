@@ -36,7 +36,7 @@ export type KiyohResponse = {
   reviews: KiyohReview[];
 };
 
-type KiyohReview = {
+export type KiyohReview = {
   reviewId: string;
   reviewAuthor: string;
   city: string;
@@ -51,7 +51,7 @@ type KiyohReview = {
 type KiyohReviewContent = {
   questionGroup: string;
   questionType: string;
-  rating: string;
+  rating?: string;
   order: number;
   questionTranslation: string;
   notApplicable?: boolean;

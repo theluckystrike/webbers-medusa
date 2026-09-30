@@ -1,9 +1,77 @@
 import { MedusaContainer } from '@medusajs/framework/types';
-import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
+import { ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils';
 import { REVIEW_MODULE } from '../modules/review';
 import type ReviewService from '../modules/review/service';
-import { KiyohResponse } from '../types/kiyoh';
+import { KiyohResponse, KiyohReview } from '../types/kiyoh';
 import { createReviewsWorkflow } from '../workflows/review/create-reviews';
+
+const KIYOH_ASSET_URL = 'https://www.kiyoh.com';
+
+// Question groups stored in the review's own fields; every other answered question goes to `metadata.kiyoh_answers`.
+const MAPPED_QUESTION_GROUPS = ['DEFAULT_OVERALL', 'DEFAULT_ONELINER', 'DEFAULT_OPINION', 'DEFAULT_RECOMMEND'];
+const PHOTO_QUESTION_TYPE = 'IMAGE';
+
+// Keyed by the question as Kiyoh shows it, e.g. { "Gekozen kleur": "Wit" }.
+const getUnmappedKiyohAnswers = (review: KiyohReview) =>
+  Object.fromEntries(
+    review.reviewContent
+      .filter(
+        rc =>
+          !MAPPED_QUESTION_GROUPS.includes(rc.questionGroup) &&
+          rc.questionType !== PHOTO_QUESTION_TYPE &&
+          !rc.notApplicable &&
+          rc.rating != null
+      )
+      .map(rc => [rc.questionTranslation, rc.rating])
+  );
+
+// A photo answer holds Kiyoh's `{ "thumbnailPath": …, "imagePath": … }` JSON; the paths are relative to kiyoh.com.
+const getKiyohPhotoUrl = (review: KiyohReview) => {
+  const photoAnswer = review.reviewContent.find(rc => rc.questionType === PHOTO_QUESTION_TYPE && !rc.notApplicable)?.rating;
+
+  if (!photoAnswer) {
+    return null;
+  }
+
+  try {
+    const { imagePath } = JSON.parse(photoAnswer) as { imagePath?: string };
+    return imagePath ? `${KIYOH_ASSET_URL}${imagePath}` : null;
+  } catch {
+    return null;
+  }
+};
+
+// Copies the photo into the host app's file provider, so the store doesn't depend on Kiyoh's image URLs.
+const uploadKiyohPhoto = async (container: MedusaContainer, review: KiyohReview) => {
+  const photoUrl = getKiyohPhotoUrl(review);
+
+  if (!photoUrl) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(photoUrl);
+    if (!response.ok) {
+      throw new Error(`Photo download failed with status ${response.status}`);
+    }
+
+    const extension = new URL(photoUrl).pathname.match(/\.\w+$/)?.[0] ?? '';
+    const fileService = container.resolve(Modules.FILE);
+    const [uploadedFile] = await fileService.createFiles([
+      {
+        filename: `kiyoh-review-${review.reviewId}${extension}`,
+        mimeType: response.headers.get('content-type') ?? 'image/png',
+        content: Buffer.from(await response.arrayBuffer()).toString('base64'),
+        access: 'public',
+      },
+    ]);
+
+    return uploadedFile?.url ?? null;
+  } catch (error: any) {
+    console.error(`Skipping photo of Kiyoh review ${review.reviewId}:`, error?.message ?? error);
+    return null;
+  }
+};
 
 export default async function syncKiyohReviewsJob(container: MedusaContainer) {
   console.log('Syncing Kiyoh reviews...');
@@ -106,8 +174,18 @@ export default async function syncKiyohReviewsJob(container: MedusaContainer) {
           original_title: reviewTitle,
           original_content: reviewContent,
           kiyoh_review_id: review.reviewId,
+          kiyoh_rating: review.rating,
+          kiyoh_reference_code: review.referenceCode,
+          kiyoh_language: review.reviewLanguage,
+          kiyoh_answers: getUnmappedKiyohAnswers(review),
         },
       };
+
+      const uploadedPhotoUrl = reviewService.enableReviewImages ? await uploadKiyohPhoto(container, review) : null;
+
+      if (uploadedPhotoUrl) {
+        medusaReview.images = [{ url: uploadedPhotoUrl }];
+      }
 
       if (usedProductIds.length > 0) {
         medusaReview.products = usedProductIds;

@@ -13,6 +13,7 @@ export const createReviewsStep = createStep(
     const createData: any[] = data.map(d => ({
       ...d,
       status: reviewService.defaultReviewStatus,
+      has_images: !!d?.images?.length,
       images:
         d?.images?.map(image => ({
           url: image.url,

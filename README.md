@@ -144,6 +144,9 @@ plugins: [
     options: {
       // Status given to newly created reviews: 'pending' | 'approved' | 'flagged'. Default: 'approved'
       defaultReviewStatus: 'pending',
+      // Whether reviews use photos: the Kiyoh sync copies review photos to the file provider, and the store
+      // API returns them. Set to false to leave photos out everywhere. Default: true
+      enableReviewImages: true,
       // ...anonymize / editEmail options...
     },
   },
@@ -159,7 +162,8 @@ KIYOH_API_TOKEN=...
 ```
 
 It matches Kiyoh reviews to orders by `referenceCode` (order display id) and creates product reviews
-through `createReviewsWorkflow`. The workflows are exported (`createReviewsWorkflow`,
+through `createReviewsWorkflow`. With `enableReviewImages` on (the default), it also copies each review's
+customer photo from Kiyoh to the host app's file provider and attaches it as a review image. The workflows are exported (`createReviewsWorkflow`,
 `updateReviewsWorkflow`, `refreshProductReviewStatsWorkflow`, …) for host scripts, e.g. bulk imports
 or stats regeneration.
 
