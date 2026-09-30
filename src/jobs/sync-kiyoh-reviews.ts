@@ -1,5 +1,7 @@
 import { MedusaContainer } from '@medusajs/framework/types';
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
+import { REVIEW_MODULE } from '../modules/review';
+import type ReviewService from '../modules/review/service';
 import { KiyohResponse } from '../types/kiyoh';
 import { createReviewsWorkflow } from '../workflows/review/create-reviews';
 
@@ -30,7 +32,24 @@ export default async function syncKiyohReviewsJob(container: MedusaContainer) {
     }
 
     const data: KiyohResponse = await response.json();
-    const reviews = data.reviews.filter(review => !!review.referenceCode);
+    const referencedReviews = data.reviews.filter(review => !!review.referenceCode);
+
+    if (!referencedReviews.length) {
+      return;
+    }
+
+    // Synced and imported reviews keep Kiyoh's `dateSince` as `created_at`, so an already stored copy
+    // of any fetched review is created no earlier than the oldest fetched one (a day's margin covers
+    // exports that round or shift the timestamp).
+    const oldestReviewTime = Math.min(...referencedReviews.map(review => new Date(review.dateSince).getTime()));
+    const oldestReviewDate = new Date(oldestReviewTime - 24 * 60 * 60 * 1000);
+    const reviewService = container.resolve<ReviewService>(REVIEW_MODULE);
+    const storedReviews = await reviewService.listReviews(
+      { created_at: { $gte: oldestReviewDate } },
+      { select: ['id', 'metadata'], take: null }
+    );
+    const storedKiyohReviewIds = new Set(storedReviews.map(review => review.metadata?.kiyoh_review_id).filter(Boolean));
+    const reviews = referencedReviews.filter(review => !storedKiyohReviewIds.has(review.reviewId));
 
     if (!reviews.length) {
       return;
